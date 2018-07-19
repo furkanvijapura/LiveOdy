@@ -1,0 +1,480 @@
+//
+//  EditSOSummeryDetailsScreen.swift
+//  Odin_App_Project_Swift
+//
+//  Created by Sunil Yadav on 16/01/18.
+//  Copyright © 2018 discussolutions. All rights reserved.
+//
+
+import UIKit
+var boolSOUpdate = Bool()
+class EditSOSummeryDetailsScreen: UIViewController,UITableViewDelegate,UITableViewDataSource
+{
+    
+   // @IBOutlet weak var btndeleteOL: UIButton!
+    @IBOutlet var lblTotalItems: UILabel!
+    var buyerName = NSString()
+    var status = NSString()
+    var approverName = NSString()
+    var sellerName = NSString()
+    var creatorDate = NSString()
+    var shipAddress = NSString()
+    var saleType = NSString()
+    var soProducDetails = NSArray()
+    var orSalesTypeIdEdit = NSString()
+    var totalAmount = String()
+    var orIDEdit = NSNumber()
+    var approcedIDEdit = NSNumber()
+    var statusID = NSNumber()
+    var soTotalEditQty = Double()
+    var pricebookNameEdit = NSString()
+    var pricebookIdEdit = NSNumber()
+    var orNumberEdit = NSString()
+    var socurrencySymbolEdit = NSString()
+    var arraySOApproverNameListGenerat = NSArray()
+
+    @IBOutlet var lblAfterFinalAmount: UILabel!
+    @IBOutlet var lblTotalDiscount: UILabel!
+    @IBOutlet var lblFinalDiscount: UILabel!
+    @IBOutlet var lblFinalAmount: UILabel!
+    
+    var arrFinalSOProduct : NSMutableArray = NSMutableArray()
+    var arrBasicPrice : NSMutableArray = NSMutableArray()
+    var arrSku : NSMutableArray = NSMutableArray()
+    var arrMaserment : NSMutableArray = NSMutableArray()
+    var arrSelectProduct : NSMutableArray = NSMutableArray()
+    var arrCategoryName : NSMutableArray = NSMutableArray()
+    var CurrencySymbolEdit : NSMutableArray = NSMutableArray()
+    var strTotalAmount = String()
+    var logoEditProfileId = NSNumber()
+    var logoEditProfileName = NSString()
+    var strTotalItemsEdit = String()
+    
+    @IBOutlet weak var tblOSSummery: UITableView!
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        self.navigationItem.hidesBackButton = true
+        let backButton = UIBarButtonItem(image: #imageLiteral(resourceName: "Back_icon"), landscapeImagePhone: #imageLiteral(resourceName: "Back_icon"), style: UIBarButtonItemStyle.plain, target: self, action:#selector(SOSummeryDetailsScreen.back(sender:)))
+        self.navigationItem.leftBarButtonItem = backButton
+        self.title = "Update SO"
+        if boolSOUpdate == true{
+            lblFinalAmount.text=(CurrencySymbolEdit.object(at: 0) as? String)! + " " + strTotalAmount
+            lblAfterFinalAmount.text=(CurrencySymbolEdit.object(at: 0) as? String)! + " " + strTotalAmount
+            lblFinalDiscount.text=(CurrencySymbolEdit.object(at: 0) as? String)! + " " + "0"
+            lblTotalItems.text=strTotalItemsEdit + " Items"
+        }
+        else{
+        lblFinalAmount.text=(socurrencySymbolEdit as String) + " " + totalAmount
+            lblAfterFinalAmount.text=(socurrencySymbolEdit as String) + " " + totalAmount
+            lblFinalDiscount.text=(socurrencySymbolEdit as String) + " " + "0"
+            lblTotalItems.text=String(soTotalEditQty) + " Items"
+        }
+    }
+    
+    func numberOfSections(in tableView: UITableView) -> Int
+    {
+        return 3
+    }
+    func back(sender: UIBarButtonItem) {
+        _ = navigationController?.popViewController(animated: true)
+    }
+    @IBAction func btnApproverTapped(_ sender: Any) {
+        if Reachability.isConnectedToNetwork(){
+            let destination1 = self.storyboard?.instantiateViewController(withIdentifier: "SOApproverList") as? SOApproverList
+            self.present(destination1!, animated: false, completion: nil)
+        }
+        else
+        {
+            self.displayAlertMessage(messageToDisplay: "Internet connection not available!")
+        }
+
+    }
+    @IBAction func btnAddProductTapped(_ sender: Any)
+    {
+        if Reachability.isConnectedToNetwork(){
+        let objReg=self.storyboard?.instantiateViewController(withIdentifier:"SOSelectProduct") as! SOSelectProduct
+        //objReg.arrayProductLists=orProducDetails
+        let sopricebookIdEdit: NSNumber? = UserDefaults.standard.object(forKey: "sopricebookIdEdit") as? NSNumber
+        soPricebookIDMain=(sopricebookIdEdit?.stringValue)!
+        boolSOUpdate = true
+        self.navigationController?.pushViewController(objReg, animated: true)
+        }
+        else
+        {
+            self.displayAlertMessage(messageToDisplay: "Internet connection not available!")
+        }
+    }
+    func getGenerateApproverList()
+    {
+        if Reachability.isConnectedToNetwork(){
+         START_INDICATOR()
+        let objDic:NSMutableDictionary=NSMutableDictionary.init()
+        objDic .setValue("sellerDetailsFromBuyerForSO", forKey:"value")
+        objDic .setValue(soSellerIDMain, forKey:"sellerId")
+        objDic .setValue(SoBuyerIDMain, forKey:"buyerId")
+        APISession.postDataWithRequestwithTokenDelete(objDic, withAPIName: "data/list?all=false") { (response, isVisit)
+            in
+            print(("Response is......",response))
+            self.STOP_INDICATOR()
+            if response != nil
+            {
+                let allsellerDetails : NSDictionary = response! .value(forKey: "sellerDetails") as! NSDictionary
+                print("orList==",allsellerDetails)
+                
+                self.arraySOApproverNameListGenerat = allsellerDetails.value(forKey: "approversName") as! NSArray
+                SOApproverListarr = self.arraySOApproverNameListGenerat
+            }
+        }
+        }
+        else
+        {
+            self.displayAlertMessage(messageToDisplay: "Internet connection not available!")
+        }
+    }
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        
+        switch section {
+        case 0:
+            return 1
+        case 1:
+            if boolSOUpdate == true{
+                return arrSelectProduct.count
+            }
+            else{
+            return soProducDetails.count
+            }
+        default:
+            return 0
+        }
+    }
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        switch indexPath.section {
+        case 0:
+            let cell = tblOSSummery.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! EditSOCreatMainCell
+            
+            let sobuyerName: String? = UserDefaults.standard.object(forKey: "sobuyerName") as? String
+            let sosellerName: String? = UserDefaults.standard.object(forKey: "sosellerName") as? String
+            let socreatorDate: String? = UserDefaults.standard.object(forKey: "socreatorDate") as? String
+            let soshipAddress: String? = UserDefaults.standard.object(forKey: "soshipAddress") as? String
+            let sosaleType: String? = UserDefaults.standard.object(forKey: "sosaleType") as? String
+            let sopricebookNameEdit: String? = UserDefaults.standard.object(forKey: "sopricebookNameEdit") as? String
+            let socreatorName: String? = UserDefaults.standard.object(forKey: "socreatorName") as? String
+            let sostatus: String? = UserDefaults.standard.object(forKey: "sostatus") as? String
+
+            cell.txtOrgName.text=sobuyerName
+            cell.txtRetailerName.text=sosellerName
+            cell.txtSalesType.text=sosaleType
+            cell.txtSelectdate.text=socreatorDate
+            cell.txtShippingAddress.text=soshipAddress
+            cell.txtPricebookPrice.text=sopricebookNameEdit
+            cell.txtApproverName.text=socreatorName
+            cell.txtStatus.text=sostatus
+            return cell
+        case 1:
+            let cell = tblOSSummery.dequeueReusableCell(withIdentifier: "cell1", for: indexPath) as! EditSOCreatProductcell
+            if boolSOUpdate == true
+            {
+                cell.lblProductName.text = arrSelectProduct[indexPath.row] as? String
+                cell.lblSku.text = arrSku[indexPath.row] as? String
+                cell.lblMesurement.text = arrMaserment[indexPath.row] as? String
+                cell.lblCategoryName.text = arrCategoryName[indexPath.row] as? String
+                
+                let objDataTest : NSDictionary = arrFinalSOProduct[indexPath.row] as! NSDictionary
+                let strCurrency: String=(CurrencySymbolEdit[indexPath.row] as? String)!
+                if let quantity : String = objDataTest.value(forKey: "quantity") as? String
+                {
+                    cell.btnQTy.setTitle(quantity + "Qty", for: UIControlState.normal)
+                }
+                if let totalPrice : String = objDataTest.value(forKey: "basicPrice") as? String
+                {
+                    cell.btnSellngPrice.setTitle(strCurrency + " " + totalPrice, for: UIControlState.normal)
+                }
+                if let productTotal : String = objDataTest.value(forKey: "productTotal") as? String
+                {
+                    cell.btnFinalAmount.setTitle(strCurrency + " " + productTotal, for: UIControlState.normal)
+                }
+                if let priceBookPrice : NSNumber = objDataTest.value(forKey: "priceBookPrice") as? NSNumber
+                {
+                    cell.btnPriceBookPrice.setTitle(strCurrency + " " + priceBookPrice.stringValue, for: UIControlState.normal)
+                }
+                if let discountAmount : String = objDataTest.value(forKey: "discountAmount") as? String
+                {
+                    cell.btnDiscount.setTitle(strCurrency + " " + discountAmount, for: UIControlState.normal)
+                }
+            }
+            else{
+            let objData : NSDictionary = self.soProducDetails[indexPath.row] as! NSDictionary
+            //let logoName : String = (objData.value(forKey: "logoName") as? String)!
+            let uom : String = (objData.value(forKey: "uom") as? String)!
+            let category : String = (objData.value(forKey: "categoryName") as? String)!
+            let sku : String = (objData.value(forKey: "sku") as? String)!
+            let productName : String = (objData.value(forKey: "productName") as? String)!
+            let priceBookPrice : NSNumber = (objData.value(forKey: "priceBookPrice") as? NSNumber)!
+            let totalPrice : NSNumber = (objData.value(forKey: "productTotal") as? NSNumber)!
+            let quantity : NSNumber = (objData.value(forKey: "quantity") as? NSNumber)!
+            let basicPrice : NSNumber = (objData.value(forKey: "basicPrice") as? NSNumber)!
+            let discount : NSNumber = (objData.value(forKey: "discountAmount") as? NSNumber)!
+            let logoId : NSNumber = (objData.value(forKey: "logoId") as? NSNumber)!
+            let logoName : String = (objData.value(forKey: "logoName") as? String)!
+            let currencySymbol : String = (objData.value(forKey: "currencySymbol") as? String)!
+
+            if logoName != ""
+            {
+                let imgprofile  = Constant.WEBSERVICE_URLUploadImage + logoId.stringValue + "_" + (logoName as String)
+                let strValue:String = imgprofile + "?token=" + objInfo.Token
+                let url = URL(string: strValue)
+                let data = try? Data(contentsOf: url!)
+                if data != nil{
+                cell.imgProfilePic.image = UIImage(data: data!)
+                }
+            }
+            
+            cell.lblProductName.text=productName
+            cell.lblCategoryName.text=category
+            cell.lblMesurement.text=uom
+            cell.lblSku.text=sku
+            cell.btnPriceBookPrice.setTitle(currencySymbol + " " + priceBookPrice.stringValue, for: UIControlState.normal)
+            cell.btnDiscount.setTitle(currencySymbol + " " + discount.stringValue, for: UIControlState.normal)
+            cell.btnSellngPrice.setTitle(currencySymbol + " " + basicPrice.stringValue, for: UIControlState.normal)
+            cell.btnFinalAmount.setTitle(currencySymbol + " " + totalPrice.stringValue, for: UIControlState.normal)
+            cell.btnQTy.setTitle(quantity.stringValue + " Qty", for: UIControlState.normal)
+            }
+            return cell
+        default :
+            let cell = tblOSSummery.dequeueReusableCell(withIdentifier: "cell2", for: indexPath) as! EditSOCreatAddresscell
+            return cell
+        }
+    }
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        switch indexPath.section {
+        case 0:
+            return 540.0
+        case 1:
+            return 86.0
+        case 2:
+            return 100.0
+        default:break
+        }
+        return 0
+    }
+    
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+    }
+    @IBAction func btnCancelTapped(_ sender: Any) {
+        _ = navigationController?.popViewController(animated: true)
+    }
+    var point = Int()
+    var indexPathStr = String()
+    var indexPathProductTotal = String()
+    var indexPathProductQuntity = String()
+    var docName = String()
+    func buttonPressed(sender: AnyObject)
+    {
+        if Reachability.isConnectedToNetwork(){
+        let pointInTable: CGPoint = sender.convert(sender.bounds.origin, to: self.tblOSSummery)
+        let cellIndexPath = self.tblOSSummery.indexPathForRow(at: pointInTable)
+        print(cellIndexPath!)
+        point = cellIndexPath!.row
+        print(point)
+        }
+        else
+        {
+            self.displayAlertMessage(messageToDisplay: "Internet connection not available!")
+        }
+    }
+    
+    func APICallingToDeleteProduct()
+    {
+        if Reachability.isConnectedToNetwork(){
+         START_INDICATOR()
+        let objDic:NSMutableDictionary=NSMutableDictionary.init()
+        objDic .setValue(orIDEdit, forKey:"soId")
+        objDic .setValue(indexPathStr, forKey:"soProductId")
+        objDic .setValue(totalAmount, forKey:"soTotal")
+        objDic .setValue(indexPathProductTotal, forKey:"soProductTotal")
+        objDic .setValue(soTotalEditQty, forKey:"soTotalQuantity")
+        objDic .setValue("0", forKey:"soTotalDiscount")
+        objDic .setValue(indexPathProductQuntity, forKey:"soProductQuantity")
+        print(("objIdc delete data is ==",objDic))
+        //docs/deleteDocument
+        APISession.postDataWithRequestwithTokenDelete(objDic, withAPIName: "saleOrder/saleType/" + (orSalesTypeIdEdit as String) + "/delete")
+        {
+            (response, permissions) in
+            //            self.arrayResponse=response!
+            print("response is ==",response!)
+            self.STOP_INDICATOR()
+            let msg:String=(response as AnyObject).value(forKey: "message") as! String
+            print(msg)
+            let alert = UIAlertController(title:"Message", message:msg, preferredStyle: UIAlertControllerStyle.alert)
+            let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler:
+            {
+                (alert:UIAlertAction!) -> Void in
+               // self.getSOProfile()
+                getSOListing()
+                SOListData = SOModel_List.GenrateSOModelData()
+            })
+            alert.addAction(okAction)
+            let alertWindow = UIWindow(frame: UIScreen.main.bounds)
+            alertWindow.rootViewController = UIViewController()
+            alertWindow.windowLevel = UIWindowLevelAlert + 1;
+            alertWindow.makeKeyAndVisible()
+            alertWindow.rootViewController?.present(alert, animated: true, completion: nil)
+        }
+        }
+        else
+        {
+            self.displayAlertMessage(messageToDisplay: "Internet connection not available!")
+        }
+    }
+
+    
+    @IBAction func btnDeleteSOProductTapped(_ sender: Any) {
+        if Reachability.isConnectedToNetwork(){
+        buttonPressed(sender: sender as AnyObject)
+        let id:NSArray=(self.soProducDetails as AnyObject).value(forKey: "id") as! NSArray
+        indexPathStr = (id[point] as AnyObject).stringValue
+        
+        let productTotal:NSArray=(self.soProducDetails as AnyObject).value(forKey: "productTotal") as! NSArray
+        indexPathProductTotal = (productTotal[point] as AnyObject).stringValue
+        
+        let productQuantity:NSArray=(self.soProducDetails as AnyObject).value(forKey: "quantity") as! NSArray
+        indexPathProductQuntity = (productQuantity[point] as AnyObject).stringValue
+        
+        let alert = UIAlertController(title: "Delete Document", message:"Are you sure you want to delete this product?", preferredStyle: UIAlertControllerStyle.alert)
+        let okAction = UIAlertAction(title: "Yes", style: UIAlertActionStyle.default, handler:
+        {
+            (alert:UIAlertAction!) -> Void in
+            self.APICallingToDeleteProduct()
+            
+            getORListing()
+            tablevaaaar.reloadData()
+        })
+        let cancelAction = UIAlertAction(title: "No", style: .default, handler:
+        {
+            (alert:UIAlertAction!) -> Void in
+        })
+        alert.addAction(okAction)
+        alert.addAction(cancelAction)
+        let alertWindow = UIWindow(frame: UIScreen.main.bounds)
+        alertWindow.rootViewController = UIViewController()
+        alertWindow.windowLevel = UIWindowLevelAlert + 1;
+        alertWindow.makeKeyAndVisible()
+        alertWindow.rootViewController?.present(alert, animated: true, completion: nil)
+        }
+        else
+        {
+            self.displayAlertMessage(messageToDisplay: "Internet connection not available!")
+        }
+    }
+    @IBAction func btnSaveTapped(_ sender: Any) {
+        if Reachability.isConnectedToNetwork(){
+        SOUpdatePialling()
+        let allVC = self.navigationController?.viewControllers
+        let countinggg = (allVC?.count)! - 1
+        if  let inventoryListVC = allVC![allVC!.count-countinggg] as? SOListScreen {
+            self.navigationController!.popToViewController(inventoryListVC, animated: true)
+             self.STOP_INDICATOR()
+        }
+        }
+        else
+        {
+            self.displayAlertMessage(messageToDisplay: "Internet connection not available!")
+        }
+    }
+    
+    func SOUpdatePialling()
+    {
+        if Reachability.isConnectedToNetwork(){
+         START_INDICATOR()
+        let sopricebookIdEdit: NSNumber? = UserDefaults.standard.object(forKey: "sopricebookIdEdit") as? NSNumber
+        let soNumberEdit: String? = UserDefaults.standard.object(forKey: "soNumberEdit") as? String
+        let soIDEdit: NSNumber? = UserDefaults.standard.object(forKey: "soIDEdit") as? NSNumber
+        let soSalesTypeId: NSString? = UserDefaults.standard.object(forKey: "soSalesTypeId") as? NSString
+       // let sostatusId: NSString? = UserDefaults.standard.object(forKey: "sostatusId") as? NSString
+         let approvedID: NSString? = UserDefaults.standard.object(forKey: "approvedID") as? NSString
+
+            let objDic:NSMutableDictionary=NSMutableDictionary.init()
+            objDic .setValue(soIDEdit, forKey:"id")
+            objDic .setValue(soNumberEdit, forKey:"soNumberEdit")
+            objDic .setValue(approvedID, forKey:"approverId")
+            objDic .setValue(sopricebookIdEdit, forKey:"priceBookId")
+            objDic .setValue("0", forKey:"discountPercentage")
+            objDic .setValue("4", forKey:"statusId")
+            objDic .setValue("0", forKey:"totalWithoutTax")
+            objDic .setValue("0", forKey:"totalDiscount")
+            objDic .setValue("percentage", forKey:"discountType")
+        
+        if boolSOUpdate == true
+        {
+            objDic .setValue(strTotalAmount, forKey:"totalPrice")
+            objDic .setValue(strTotalAmount, forKey:"grandTotal")
+            objDic .setValue(strTotalItemsEdit, forKey:"totalQty")
+            objDic .setValue(arrFinalSOProduct, forKey:"productList")
+        }
+        else{
+            objDic .setValue(totalAmount, forKey:"totalPrice")
+            objDic .setValue(totalAmount, forKey:"grandTotal")
+            objDic .setValue(soTotalEditQty, forKey:"totalQty")
+            objDic .setValue(soProducDetails, forKey:"productList")
+        }
+            print(("objIdc delete data is ==",objDic))
+            //docs/deleteDocument
+            APISession.postDataWithRequestwithTokenDelete(objDic, withAPIName: "saleOrder/saleType/" + (soSalesTypeId! as String) + "/update")
+            {
+                (response, permissions) in
+                self.STOP_INDICATOR()
+                //            self.arrayResponse=response!
+                print("response is ==",response!)
+            if response != nil
+            {
+                let message = (response!.value(forKey: "message") as? String)!
+                let status = response?.value(forKey: "status") as? Int64
+                if status != nil
+                {
+                    if status == 0
+                    {
+                        let alert = UIAlertController(title:"", message:message, preferredStyle: UIAlertControllerStyle.alert)
+                        let cancelAction = UIAlertAction(title: "OK", style: .default, handler:
+                        {
+                            (alert:UIAlertAction!) -> Void in
+                        })
+                        alert.addAction(cancelAction)
+                        let alertWindow = UIWindow(frame: UIScreen.main.bounds)
+                        alertWindow.rootViewController = UIViewController()
+                        alertWindow.windowLevel = UIWindowLevelAlert + 1;
+                        alertWindow.makeKeyAndVisible()
+                        alertWindow.rootViewController?.present(alert, animated: true, completion: nil)
+                    }
+                    else if status == 1
+                    {
+                        
+                        let alert = UIAlertController(title:"", message:message, preferredStyle: UIAlertControllerStyle.alert)
+                        let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.default, handler:
+                        {
+                            (alert:UIAlertAction!) -> Void in
+                            self.OK()
+                        })
+                        alert.addAction(okAction)
+                        let alertWindow = UIWindow(frame: UIScreen.main.bounds)
+                        alertWindow.rootViewController = UIViewController()
+                        alertWindow.windowLevel = UIWindowLevelAlert + 1;
+                        alertWindow.makeKeyAndVisible()
+                        alertWindow.rootViewController?.present(alert, animated: true, completion: nil)
+                    }
+                }
+            }
+        }
+        }
+        else
+        {
+            self.displayAlertMessage(messageToDisplay: "Internet connection not available!")
+        }
+    }
+    func OK()
+    {
+       
+        self.navigationController?.popToRootViewController(animated: true)
+    }
+    
+}
