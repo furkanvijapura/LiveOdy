@@ -1,10 +1,4 @@
- //
- //  LoginScreen.swift
- //  Odin_App_Project_Swift
- //
- //  Created by discussolutions on 6/21/17.
- //  Copyright © 2017 discussolutions. All rights reserved.
- //
+
  
  import UIKit
  //import QuartzCore
@@ -37,11 +31,7 @@
         //            print("TEst constant====",Constant.WEBSERVICE_URL1)
         self.addDoneButtonOnKeyboard()
         
-        // txtEmail.text="admin@azafrangroup.com"
-        // txtPassword.text="admin321"
-        
-        //              txtEmail.text="admin@INTERNAL-TESTING.com"
-        //             txtPassword.text="admin123"
+
         let strGetToken: NSNumber? = UserDefaults.standard.object(forKey: "LoginTag") as? NSNumber
         if strGetToken == 1001
         {
@@ -57,36 +47,15 @@
             btnRemember.isSelected = false;
             // txtEmail.text=""
             // txtPassword.text=""
-            //                txtEmail.text="admin@INTERNAL-TESTING.com"
-            //                txtPassword.text="admin123"
+      
             if Constant.BoolServer == false
             {
-                //                    txtEmail.text="admin@INTERNAL-TESTING.com" //AWSS
-                //                    txtPassword.text="admin123"
-                
-                //                    txtEmail.text="rudrik.oza@discus.solutions" //129
-                //                    txtPassword.text="admin123"
-                
-                //                    txtEmail.text="sunil.yadav@discus.solutions"
-                //                    txtPassword.text="admin321"
-                
-//                                    txtEmail.text="arpit.jariwala+internal@discus.solutions"
-//                                    txtPassword.text="admin123"
-                
-                //                    txtEmail.text="furkan.vijapura@discus.solutions"
-                //                    txtPassword.text="admin123"
-                
-                                    txtEmail.text="admin@azafrangroup.com"
-                                    txtPassword.text="admin321"
-                
-//                txtEmail.text = "radhika.nair+2@discus.solutions"
-//                txtPassword.text = "admin123"
+            
                 
             }
             else
             {
-                txtEmail.text="rudrik.oza@discus.solutions" //124
-                txtPassword.text="admin123"
+         
             }
         }
         /*
